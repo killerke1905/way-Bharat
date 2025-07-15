@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Map App</title>
+    <link href="https://unpkg.com/maplibre-gl@4.1.1/dist/maplibre-gl.css" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="icon" type="image/svg+xml" href="map-icon.svg">
+</head>
+<body>
+    <!-- Loading Screen -->
+    <div id="loading-screen" class="loading-screen">
+        <div class="loading-content">
+            <div class="loading-spinner"></div>
+            <p>Loading Interactive Map...</p>
+        </div>
+    </div>
+
+    <!-- Main App Container -->
+    <div id="app" class="app hidden">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <div class="header-left">
+                    <div class="logo">
+                        <svg class="logo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                            <circle cx="12" cy="10" r="3"></circle>
+                        </svg>
+                        <h1>Interactive Map</h1>
+                    </div>
+                </div>
+
+                <div class="header-center">
+                    <div class="search-container">
+                        <div class="search-bar">
+                            <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="11" cy="11" r="8"></circle>
+                                <path d="m21 21-4.35-4.35"></path>
+                            </svg>
+                            <input type="text" id="search-input" placeholder="Search for places..." autocomplete="off">
+                            <button id="clear-search" class="clear-search hidden">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                                </svg>
+                            </button>
+                        </div>
+                        <div id="search-results" class="search-results hidden"></div>
+                    </div>
+                </div>
+
+                <div class="header-right">
+                    <button id="geolocation-btn" class="header-btn" title="My Location">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polygon points="3 11 22 2 13 21 11 13 3 11"></polygon>
+                        </svg>
+                    </button>
+                    <button id="routing-toggle" class="header-btn" title="Directions">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polygon points="3 11 22 2 13 21 11 13 3 11"></polygon>
+                        </svg>
+                    </button>
+                    <button id="theme-toggle" class="header-btn" title="Toggle Theme">
+                        <svg class="theme-icon-light" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                        </svg>
+                        <svg class="theme-icon-dark hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="5"></circle>
+                            <line x1="12" y1="1" x2="12" y2="3"></line>
+                            <line x1="12" y1="21" x2="12" y2="23"></line>
+                            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                            <line x1="1" y1="12" x2="3" y2="12"></line>
+                            <line x1="21" y1="12" x2="23" y2="12"></line>
+                            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Sidebar -->
+            <aside id="sidebar" class="sidebar">
+                <!-- Sidebar Wrapper -->
+<div id="sidebar" class="sidebar open">
+    <div class="sidebar-header">
+        <div class="sidebar-tabs">
+            <button id="explore-tab" class="sidebar-tab active">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                    <circle cx="12" cy="10" r="3"></circle>
+                </svg>
+                Explore
+            </button>
+            <button id="directions-tab" class="sidebar-tab">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="9 11 12 14 22 4"></polyline>
+                    <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
+                </svg>
+                Directions
+            </button>
+        </div>
+        <button id="sidebar-toggle" class="sidebar-toggle">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="15 18 9 12 15 6"></polyline>
+            </svg>
+        </button>
+    </div>
+</div>
+
+                <!-- Explore Panel -->
+                <div id="explore-panel" class="sidebar-panel">
+                    <div class="panel-section">
+                        <input type="text" id="poi-search" placeholder="Search POIs..." class="panel-input">
+                    </div>
+
+                    <div class="panel-section">
+                        <h3 class="panel-title">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
+                            </svg>
+                            Categories
+                        </h3>
+                        <div class="category-grid">
+                            <button class="category-btn active" data-category="all">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                                    <circle cx="12" cy="10" r="3"></circle>
+                                </svg>
+                                All Places
+                            </button>
+                            <button class="category-btn" data-category="restaurant">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"></path>
+                                    <path d="M7 2v20"></path>
+                                    <path d="M21 15V2v0a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3z"></path>
+                                </svg>
+                                Restaurants
+                            </button>
+                            <button class="category-btn" data-category="hotel">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
+                                    <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
+                                </svg>
+                                Hotels
+                            </button>
+                            <button class="category-btn" data-category="hospital">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.29 1.51 4.04 3 5.5l7 7z"></path>
+                                </svg>
+                                Hospitals
+                            </button>
+                            <button class="category-btn" data-category="tourist">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
+                                    <line x1="3" y1="6" x2="21" y2="6"></line>
+                                    <path d="M16 10a4 4 0 0 1-8 0"></path>
+                                </svg>
+                                Tourist Spots
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="panel-section">
+                        <h3 class="panel-title">Places (<span id="poi-count">0</span>)</h3>
+                        <div id="poi-list" class="poi-list"></div>
+                    </div>
+                </div>
+
+                <!-- Directions Panel -->
+                <div id="directions-panel" class="sidebar-panel hidden">
+                    <div class="panel-section">
+                        <div class="route-inputs">
+                            <div class="route-input-group">
+                                <label>From</label>
+                                <input type="text" id="route-origin" placeholder="Enter starting point" class="panel-input">
+                            </div>
+                            <div class="route-input-group">
+                                <label>To</label>
+                                <input type="text" id="route-destination" placeholder="Enter destination" class="panel-input">
+                            </div>
+                            <div class="route-input-group">
+                                <label>Travel Mode</label>
+                                <select id="route-mode" class="panel-select">
+                                    <option value="driving">Driving</option>
+                                    <option value="walking">Walking</option>
+                                    <option value="cycling">Cycling</option>
+                                </select>
+                            </div>
+                            <button id="calculate-route" class="btn-primary">
+                                <span class="btn-text">Get Directions</span>
+                                <div class="btn-spinner hidden"></div>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="route-results" class="panel-section hidden">
+                        <div class="route-summary">
+                            <div class="route-info">
+                                <div class="route-stat">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <polygon points="3 11 22 2 13 21 11 13 3 11"></polygon>
+                                    </svg>
+                                    <span id="route-distance">-</span>
+                                </div>
+                                <div class="route-stat">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <circle cx="12" cy="12" r="10"></circle>
+                                        <polyline points="12 6 12 12 16 14"></polyline>
+                                    </svg>
+                                    <span id="route-duration">-</span>
+                                </div>
+                            </div>
+                            <button id="clear-route" class="btn-secondary">Clear Route</button>
+                        </div>
+
+                        <div class="route-steps">
+                            <h4>Turn-by-turn directions</h4>
+                            <div id="route-steps-list"></div>
+                        </div>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- Map Container -->
+            <main class="map-container">
+                <div id="map" class="map"></div>
+
+                <!-- Map Controls -->
+                <div class="map-controls">
+                    <div class="map-control-group top-left">
+                        <button id="layers-toggle" class="map-control-btn" title="Map Layers">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+                                <polyline points="2 17 12 22 22 17"></polyline>
+                                <polyline points="2 12 12 17 22 12"></polyline>
+                            </svg>
+                        </button>
+                        <div id="layers-panel" class="layers-panel hidden">
+                            <h3>Map Styles</h3>
+                            <div class="layer-options">
+                                <button class="layer-btn active" data-style="streets">Streets</button>
+                                <button class="layer-btn" data-style="satellite">Satellite</button>
+                                <button class="layer-btn" data-style="terrain">Terrain</button>
+                                <button class="layer-btn" data-style="dark">Dark</button>
+                                <button class="layer-btn" data-style="light">Light</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="map-control-group bottom-right">
+                        <button id="compass-btn" class="map-control-btn" title="Reset North">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"></polygon>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/maplibre-gl@4.1.1/dist/maplibre-gl.js"></script>
+    <script src="https://unpkg.com/supercluster@8.0.1/dist/supercluster.min.js"></script>
+    
+    <script src="app.js"></script>
+</body>
+</html>
